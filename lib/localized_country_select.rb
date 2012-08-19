@@ -25,26 +25,18 @@ module LocalizedCountrySelect
   class << self
     # Returns array with codes and localized country names (according to <tt>I18n.locale</tt>)
     # for <tt><option></tt> tags
-    def localized_countries_array(options={})
-      if(options[:description]==:abbreviated)
-        I18n.translate(:countries).map { |key, value| [key.to_s.upcase] }.
-          sort_by { |country| country.first }
-      else
-        I18n.translate(:countries).map { |key, value| [value, key.to_s.upcase] }.
-          sort_by { |country| country.first }
-      end
+    def localized_countries_array
+      I18n.translate(:countries).map { |key, value| [value, key.to_s.upcase] }.
+        sort_by { |country| country.first }
     end
+
     # Return array with codes and localized country names for array of country codes passed as argument
     # == Example
     #   priority_countries_array([:TW, :CN])
     #   # => [ ['Taiwan', 'TW'], ['China', 'CN'] ]
-    def priority_countries_array(country_codes=[],options={})
-      if(options[:description]==:abbreviated)
-        country_codes.map { |code| [code.to_s.upcase] }
-      else
-        countries = I18n.translate(:countries)
-        country_codes.map { |code| [countries[code.to_s.upcase.to_sym], code.to_s.upcase] }
-      end
+    def priority_countries_array(country_codes=[])
+      countries = I18n.translate(:countries)
+      country_codes.map { |code| [countries[code.to_s.upcase.to_sym], code.to_s.upcase] }
     end
   end
 end
@@ -79,9 +71,9 @@ module ActionView
         if priority_countries
           country_options += options_for_select(LocalizedCountrySelect::priority_countries_array(priority_countries), selected)
           country_options += "<option value=\"\" disabled=\"disabled\">-------------</option>\n".html_safe
-          return country_options + options_for_select(LocalizedCountrySelect::localized_countries_array - LocalizedCountrySelect::priority_countries_array(priority_countries), selected)
+          return country_options.html_safe + options_for_select(LocalizedCountrySelect::localized_countries_array - LocalizedCountrySelect::priority_countries_array(priority_countries), selected)
         else
-          return country_options + options_for_select(LocalizedCountrySelect::localized_countries_array, selected)
+          return country_options.html_safe + options_for_select(LocalizedCountrySelect::localized_countries_array, selected)
         end
       end
 
@@ -94,13 +86,13 @@ module ActionView
         value = value(object)
         content_tag("select",
           add_options(
-            country_options_for_select(value, priority_countries, options).html_safe,
+            country_options_for_select(value, priority_countries).html_safe,
             options, value
           ), html_options
         )
       end
     end
-    
+
     class FormBuilder
       def country_select(method, priority_countries = nil, options = {}, html_options = {})
         @template.country_select(@object_name, method, priority_countries, options.merge(:object => @object), html_options)
