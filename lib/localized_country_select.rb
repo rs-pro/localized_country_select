@@ -68,21 +68,23 @@ module ActionView
       # It behaves likes older object-binded brother +localized_country_select+ otherwise
       # TODO : Implement pseudo-named args with a hash, not the "somebody said PHP?" multiple args sillines
       def country_select_tag(name, selected_value = nil, priority_countries = nil, html_options = {})
-        select_tag name.to_sym, country_options_for_select(selected_value, priority_countries), html_options.stringify_keys
+        select_tag name.to_sym, country_options_for_select(selected_value, priority_countries).html_safe, html_options.stringify_keys
       end
 
       # Returns a string of option tags for countries according to locale. Supply the country code in upper-case ('US', 'DE') 
       # as +selected+ to have it marked as the selected option tag.
       # Country codes listed as an array of symbols in +priority_countries+ argument will be listed first
-      def country_options_for_select(selected = nil, priority_countries = nil,options={})
-        country_options = ""
+      def country_options_for_select(selected = nil, priority_countries = nil)
+        country_options = "".html_safe
         if priority_countries
-          country_options += options_for_select(LocalizedCountrySelect::priority_countries_array(priority_countries,options), selected)
-          country_options += "<option value=\"\" disabled=\"disabled\">-------------</option>\n"
+          country_options += options_for_select(LocalizedCountrySelect::priority_countries_array(priority_countries), selected)
+          country_options += "<option value=\"\" disabled=\"disabled\">-------------</option>\n".html_safe
+          return country_options + options_for_select(LocalizedCountrySelect::localized_countries_array - LocalizedCountrySelect::priority_countries_array(priority_countries), selected)
+        else
+          return country_options + options_for_select(LocalizedCountrySelect::localized_countries_array, selected)
         end
-        return country_options + options_for_select(LocalizedCountrySelect::localized_countries_array(options), selected)
       end
-      
+
     end
 
     class InstanceTag
@@ -92,7 +94,7 @@ module ActionView
         value = value(object)
         content_tag("select",
           add_options(
-            country_options_for_select(value, priority_countries,options),
+            country_options_for_select(value, priority_countries, options).html_safe,
             options, value
           ), html_options
         )
