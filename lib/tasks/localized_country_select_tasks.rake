@@ -10,7 +10,7 @@ require 'open-uri'
 # Don't forget to restart the application when you add new locale to load it into Rails!
 # 
 # == Example
-#   rake import:country_select LOCALE=de
+#   rake import:country_select 'de'
 # 
 # The code is deliberately procedural and simple, so it's easily
 # understandable by beginners as an introduction to Rake tasks power.
@@ -30,9 +30,9 @@ namespace :import do
     # TODO : Implement locale import chooser from CLDR root via Highline
     
     # Setup variables
-    locale = ENV['LOCALE']
+    locale = ARGV[1]
     unless locale
-      puts "\n[!] Usage: rake import:country_select LOCALE=de\n\n"
+      puts "\n[!] Usage: rake import:country_select de\n\n"
       exit 0
     end
 
@@ -52,7 +52,7 @@ namespace :import do
     doc.search("//tr").each do |row|
       if row.search("td[@class='n']") && 
          row.search("td[@class='n']").inner_html =~ /^namesterritory$/ && 
-         row.search("td[@class='g']").inner_html =~ /^[A-Z]{2}$/
+         row.search("td[@class='g']").inner_html =~ /^[A-Z]{2}/
         code   = row.search("td[@class='g']").inner_text
         code   = code[-code.size, 2]
         name   = row.search("td[@class='v']").inner_text
@@ -63,8 +63,7 @@ namespace :import do
 
 
     # ----- Prepare the output format     ------------------------------------------
-    output = "#encoding: UTF-8\n"
-    output <<<<HEAD
+    output =<<HEAD
 { :#{locale} => {
 
     :countries => {
@@ -82,10 +81,10 @@ TAIL
     
     # ----- Write the parsed values into file      ---------------------------------
     puts "\n... writing the output"
-    filename = File.join(Rails.root, 'config', 'locales', "localized_country_select.#{locale}.rb")
+    filename = Rails.root.join('config', 'locales', "#{locale}.rb")
     filename += '.NEW' if File.exists?(filename) # Append 'NEW' if file exists
     File.open(filename, 'w+') { |f| f << output }
-    puts "\n---\nWritten values for the locale '#{locale}' into file: #{filename}\n"
+    puts "\n---\nWritten values for the '#{locale}' into file: #{filename}\n"
     # ------------------------------------------------------------------------------
   end
 
